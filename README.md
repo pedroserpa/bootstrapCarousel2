@@ -11,3 +11,6 @@ Features 'slide to right' and 'fade' animations;
 --Will allow infinite loop in the near future;
 
 Super light-weight!
+
+
+<a href="http://pedroserpa.com/bootstrapCarousel2/index.html" target="_blank"><h4>See it in action!</h4></a>
