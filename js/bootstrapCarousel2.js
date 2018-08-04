@@ -12,7 +12,8 @@
         $(this).each(function()
         {
             var settings = $.extend({
-                speed:3000,
+                delay:3000,
+                speed:600,
                 loop:false,
                 animation:'slideRight',
                 navigation: true,
@@ -27,31 +28,62 @@
         function resetCarouselAnim($elm,settings)
         {
             curSlide=0;
-            $('.carousel',$elm).animate({'left':'0px'},200).css('left','0px').outerWidth(mainWidth*childzNumber);
+            if(anim==='fadeInOut')
+            {
+                $elm.find('.item').removeClass('active');
+                $elm.find('.item').eq(0).addClass('active').fadeIn(settings.speed);
+            }
+            if(anim==='slideRight') $('.carousel',$elm).animate({'left':'0px'},settings.speed).css('left','0px').outerWidth(mainWidth*childzNumber);
         }
         function runCarouselAuto($elm,settings,action)
         {
+            var delay=Math.abs(settings.delay+settings.speed);
             t=clearTimeout(t);
             t=setTimeout(function(){
                 carouselAnim($elm,settings,action);
-            }, settings.speed);
+            }, delay);
             return false;
         }
         function loopAnim($elm,settings,action='right')
         {
+            var delay=Math.abs(settings.delay+settings.speed);
             t=clearInterval(t);
             t=setInterval(function(){
                 carouselAnim($elm,settings,action);
-            }, settings.speed);
+            }, delay);
         }
         function carouselAnim($elm,settings,action)
         {
             clearTimeout(t);
-            
-            
             var toOffset=mainWidth;
-            if(anim==='fade')
+            if(anim==='fadeInOut')
             {
+                //review this asap
+                
+                if(action=='right'){
+                    if(curSlide===childzNumber-1)resetCarouselAnim($elm,settings);
+                    else
+                    {
+                        curSlide++;
+                        var $active=$elm.find('.item.active');
+                        var $next_active=$active.next('.item');
+                        $active.fadeOut(settings.speed).removeClass('active');
+                        if($next_active.length!==0)$next_active.fadeIn(settings.speed).addClass('active');
+                        else resetCarouselAnim($elm,settings);
+                    }
+                }
+                if(action=='left'){
+                    if(curSlide===0)resetCarouselAnim($elm,settings);
+                    else{
+                        curSlide--;
+                        var $active=$elm.find('.item.active');
+                        var $prev_active=$active.prev('.item');
+                        $active.fadeOut(settings.speed).removeClass('active');
+                        if($prev_active.length!==0)$prev_active.fadeIn(settings.speed).addClass('active');
+                        else resetCarouselAnim($elm,settings);
+                    }
+                }
+                
             }
             if(anim==='slideRight')
             {
@@ -60,14 +92,14 @@
                     else
                     {
                         curSlide++;
-                        $('.carousel',$elm).stop().animate({'left':'-='+toOffset+'px'},200);
+                        $('.carousel',$elm).stop().animate({'left':'-='+toOffset+'px'},settings.speed);
                     }
                 }
                 if(action=='left'){
                     if(curSlide===0)resetCarouselAnim($elm,settings);
                     else{
                         curSlide--;
-                        $('.carousel',$elm).stop().animate({'left':'+='+toOffset+'px'},200);
+                        $('.carousel',$elm).stop().animate({'left':'+='+toOffset+'px'},settings.speed);
                     }
                 }
             }
@@ -125,12 +157,12 @@
         function buildCarousel($elm,settings)
         {
             anim=settings.animation;
-            $elm.addClass('bootstrap-carousel2');
+            $elm.addClass('bootstrap-carousel2').addClass(settings.animation);
             
             $childz=$elm.find('div.slide');
-            childzNumber=$childz.length;
             mainWidth=window.outerWidth;
             viewPortWidth=$elm.parent().width();
+            childzNumber=$childz.length;
             $(window).resize(function(){
                 mainWidth=window.outerWidth;
                 viewPortWidth=$elm.parent().width();
@@ -145,13 +177,17 @@
                 else imgContent=($(o).find('img.content-image').length!=0)?$(o).find('img.content-image').attr('title'):'';
                 var imgBG=($(o).find('img.content-image').length!=0)?$(o).find('img.content-image').attr('src'):'';
                 $('.carousel-holder .carousel',$elm).append('<div class="item" style="background-position:'+settings.backgroundPosition+' center;background-image:url('+imgBG+')"><div class="carousel-content-container" style="width:'+viewPortWidth+'px"><div class="carousel-content" style="width:'+viewPortWidth+'px">'+imgContent+'</div></div></div>');
+                if(settings.animation==='fadeInOut')
+                {
+                    $('.carousel-holder .carousel .item',$elm).eq(i).css('zIndex',childzNumber--);
+                }
             });
             
             $('.carousel-holder').fadeIn(400);
-            $('.carousel-holder .carousel',$elm).outerWidth(mainWidth*childzNumber);
+            $('.carousel-holder .carousel',$elm).outerWidth(((settings.animation!=='fadeInOut')?mainWidth*childzNumber:mainWidth));
             $('.carousel-holder .carousel .item',$elm).outerWidth(mainWidth);
             $('.carousel-holder .carousel .item',$elm).eq(0).addClass('active');
-            
+
             buildCarouselControls($elm,settings);
             runCarouselAuto($elm,settings,'right');
         }
